@@ -10,7 +10,7 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private Enemy mediumEnemyPrefab;
     [SerializeField] private Enemy hardEnemyPrefab;
 
-    [Header("Spawn Settings")]
+    [Header("Enemy Spawn Settings")]
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float spawnX = -8.5f;
     [SerializeField] private float minY = -5f;
@@ -21,7 +21,14 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int mediumWeight = 3;
     [SerializeField] private int hardWeight = 2;
 
+    [Header("Pickup Settings")]
+    [SerializeField] private HealthPickup healthPickupPrefab;
+    [SerializeField] private float pickupSpawnInterval = 10f;
+    [SerializeField] private float pickupMinX = -6f;
+    [SerializeField] private float pickupMaxX = 6f;
+
     private float spawnTimer;
+    private float pickupTimer;
     private List<Enemy> activeEnemies = new List<Enemy>();
 
     private void Awake()
@@ -34,6 +41,11 @@ public class EnemySpawner : MonoBehaviour
         Instance = this;
     }
 
+    void Start()
+    {
+        pickupTimer = pickupSpawnInterval;
+    }
+
     void Update()
     {
         if (!GameManager.Instance.IsRoundActive) return;
@@ -44,6 +56,13 @@ public class EnemySpawner : MonoBehaviour
             SpawnEnemy();
             spawnTimer = spawnInterval;
         }
+
+        pickupTimer -= Time.deltaTime;
+        if (pickupTimer <= 0f)
+        {
+            SpawnPickup();
+            pickupTimer = pickupSpawnInterval;
+        }
     }
 
     private void SpawnEnemy()
@@ -53,6 +72,18 @@ public class EnemySpawner : MonoBehaviour
 
         Enemy newEnemy = Instantiate(prefabToSpawn, spawnPosition, Quaternion.identity);
         activeEnemies.Add(newEnemy);
+    }
+
+    private void SpawnPickup()
+    {
+        if (healthPickupPrefab == null) return;
+
+        Vector2 spawnPosition = new Vector2(
+            Random.Range(pickupMinX, pickupMaxX),
+            Random.Range(minY, maxY)
+        );
+
+        Instantiate(healthPickupPrefab, spawnPosition, Quaternion.identity);
     }
 
     private Enemy PickWeightedEnemy()
