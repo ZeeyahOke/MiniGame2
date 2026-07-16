@@ -8,9 +8,15 @@ public class Player : MonoBehaviour, IDamageable
     [Header("Health")]
     [SerializeField] private int maxHealth = 5;
 
+    [Header("Attack")]
+    [SerializeField] private PlayerAttack attackPrefab;
+    [SerializeField] private Transform firePoint;
+    [SerializeField] private float attackCooldown = 0.25f;
+
     private int currentHealth;
     private Rigidbody2D rb;
     private Vector2 movement;
+    private float attackTimer;
 
     public int CurrentHealth => currentHealth;
     public int MaxHealth => maxHealth;
@@ -25,14 +31,37 @@ public class Player : MonoBehaviour, IDamageable
     {
         if (!GameManager.Instance.IsRoundActive) return;
 
-        float horizontal = Input.GetAxisRaw("Horizontal");
-        float vertical = Input.GetAxisRaw("Vertical");
-        movement = new Vector2(horizontal, vertical).normalized;
+        HandleMovementInput();
+        HandleAttackInput();
     }
 
     void FixedUpdate()
     {
         rb.linearVelocity = movement * moveSpeed;
+    }
+
+    private void HandleMovementInput()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+        float vertical = Input.GetAxisRaw("Vertical");
+        movement = new Vector2(horizontal, vertical).normalized;
+    }
+
+    private void HandleAttackInput()
+    {
+        attackTimer -= Time.deltaTime;
+
+        if (Input.GetKey(KeyCode.Space) && attackTimer <= 0f)
+        {
+            Attack();
+            attackTimer = attackCooldown;
+        }
+    }
+
+    private void Attack()
+    {
+        PlayerAttack attack = Instantiate(attackPrefab, firePoint.position, Quaternion.identity);
+        attack.Launch(Vector2.left);
     }
 
     public void TakeDamage(int amount)
