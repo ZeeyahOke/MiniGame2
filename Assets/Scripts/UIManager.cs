@@ -6,22 +6,58 @@ public class UIManager : MonoBehaviour
     [Header("Timer")]
     [SerializeField] private TextMeshProUGUI timerText;
 
+    [Header("Score")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+
+    [Header("Health")]
+    [SerializeField] private TextMeshProUGUI healthText;
+
     [Header("Threat")]
     [SerializeField] private TextMeshProUGUI threatText;
     [SerializeField] private float warningDistance = 1f;
 
     private Transform playerTransform;
 
+    void OnEnable()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnScoreChanged += HandleScoreChanged;
+            GameManager.Instance.OnHealthChanged += HandleHealthChanged;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnScoreChanged -= HandleScoreChanged;
+            GameManager.Instance.OnHealthChanged -= HandleHealthChanged;
+        }
+    }
+
     void Start()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null) playerTransform = player.transform;
+
+        HandleScoreChanged(GameManager.Instance.Score);
     }
 
     void Update()
     {
         UpdateTimer();
         UpdateThreat();
+    }
+
+    private void HandleScoreChanged(int newScore)
+    {
+        scoreText.text = "Score: " + newScore;
+    }
+
+    private void HandleHealthChanged(int current, int max)
+    {
+        healthText.text = "HP: " + current + "/" + max;
     }
 
     private void UpdateTimer()

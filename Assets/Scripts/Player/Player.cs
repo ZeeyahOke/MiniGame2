@@ -25,6 +25,7 @@ public class Player : MonoBehaviour, IDamageable
     {
         rb = GetComponent<Rigidbody2D>();
         currentHealth = maxHealth;
+        GameManager.Instance.ReportHealthChanged(currentHealth, maxHealth);
     }
 
     void Update()
@@ -71,13 +72,18 @@ public class Player : MonoBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             currentHealth = 0;
+            GameManager.Instance.ReportHealthChanged(currentHealth, maxHealth);
             Die();
+            return;
         }
+
+        GameManager.Instance.ReportHealthChanged(currentHealth, maxHealth);
     }
 
     public void Heal(int amount)
     {
         currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+        GameManager.Instance.ReportHealthChanged(currentHealth, maxHealth);
     }
 
     private void Die()

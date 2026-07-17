@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public interface IDamageable
@@ -9,8 +10,12 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("Round Timer")]
+    [Header("Round Settings")]
     [SerializeField] private float roundDuration = 60f;
+
+    public event Action<int> OnScoreChanged;
+    public event Action<int, int> OnHealthChanged;
+    public event Action OnRoundEnded;
 
     private int score;
     private float timeRemaining;
@@ -55,6 +60,12 @@ public class GameManager : MonoBehaviour
     public void AddScore(int amount)
     {
         score += amount;
+        OnScoreChanged?.Invoke(score);
+    }
+
+    public void ReportHealthChanged(int current, int max)
+    {
+        OnHealthChanged?.Invoke(current, max);
     }
 
     public void OnPlayerDied()
@@ -67,5 +78,6 @@ public class GameManager : MonoBehaviour
     {
         isRoundActive = false;
         Time.timeScale = 0f;
+        OnRoundEnded?.Invoke();
     }
 }
