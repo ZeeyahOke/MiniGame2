@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public interface IDamageable
@@ -13,6 +14,9 @@ public class GameManager : MonoBehaviour
     [Header("Round Settings")]
     [SerializeField] private float roundDuration = 60f;
 
+    [Header("Leaderboard")]
+    [SerializeField] private int leaderboardSize = 5;
+
     public event Action<int> OnScoreChanged;
     public event Action<int, int> OnHealthChanged;
     public event Action OnRoundEnded;
@@ -20,10 +24,12 @@ public class GameManager : MonoBehaviour
     private int score;
     private float timeRemaining;
     private bool isRoundActive;
+    private List<int> topScores = new List<int>();
 
     public int Score => score;
     public float TimeRemaining => timeRemaining;
     public bool IsRoundActive => isRoundActive;
+    public IReadOnlyList<int> TopScores => topScores;
 
     private void Awake()
     {
@@ -42,6 +48,7 @@ public class GameManager : MonoBehaviour
         timeRemaining = roundDuration;
         isRoundActive = true;
         score = 0;
+        LoadLeaderboard();
     }
 
     void Update()
@@ -78,6 +85,51 @@ public class GameManager : MonoBehaviour
     {
         isRoundActive = false;
         Time.timeScale = 0f;
+        InsertScoreIntoLeaderboard(score);
+        SaveLeaderboard();
         OnRoundEnded?.Invoke();
+    }
+
+    private void InsertScoreIntoLeaderboard(int newScore)
+    {
+        topScores.Add(newScore);
+
+        for (int i = topScores.Count - 1; i > 0; i--)
+        {
+            if (topScores[i] > topScores[i - 1])
+            {
+                int temp = topScores[i];
+                topScores[i] = topScores[i - 1];
+                topScores[i - 1] = temp;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (topScores.Count > leaderboardSize)
+        {
+            topScores.RemoveAt(topScores.Count - 1);
+        }
+    }
+
+    private void LoadLeaderboard()
+    {
+        topScores.Clear();
+        for (int i = 0; i < leaderboardSize; i++)
+        {
+            int stored = PlayerPrefs.GetInt("TopScore_" + i, -1);
+            if (stored >= 0) topScores.Add(stored);
+        }
+    }
+
+    private void SaveLeaderboard()
+    {
+        for (int i = 0; i < topScores.Count; i++)
+        {
+            PlayerPrefs.SetInt("TopScore_" + i, topScores[i]);
+        }
+        PlayerPrefs.Save();
     }
 }
